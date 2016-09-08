@@ -18,8 +18,8 @@ void readPhotoResistor() {
 
     // Publish the value to particle.
     Particle.publish("p-one_light-level", String(lightlevel));
-    delay(500);
-    
+    delay(7000);
+
     // Right it serial for debugging.
     Serial.println("light-level=" + String(lightlevel));
 }
