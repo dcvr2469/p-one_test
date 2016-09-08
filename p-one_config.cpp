@@ -5,6 +5,8 @@
  * https://www.losant.com
  */
 
+#include "application.h"
+
 int ledState = LOW;
 
 /**
