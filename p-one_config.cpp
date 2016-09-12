@@ -34,6 +34,8 @@ Timer timer(5000, readPhotoResistor);
 void setLEDState(int state) {
     digitalWrite(D0, state);
     ledState = state;
+
+    Serial.println("led-state=" + String(ledState));
 }
 
 /**
@@ -54,23 +56,12 @@ void ledToggleEvent(const char *event, const char *data) {
     else if(command.compareTo(String("p-one_led-blink")) == 0) {
         for (int x=0; x<100; x=x+1) {
           digitalWrite(D0, HIGH);
-          delay(10000);
+          delay(1000);
           digitalWrite(D0, LOW);
-          delay(10000);
+          delay(1000);
         }
     }
 }
-
-
-//void ledBlinkEvent(const char *event, const char *data){
-
-    //for (int x=0; x<100; x=x+1) {
-          //digitalWrite(D0, HIGH);
-          //delay(10000);
-          //digitalWrite(D0, LOW);
-          //delay(10000);
-    //}
-//}
 
 /**
  * Called automatically by Photon once when the device
@@ -94,7 +85,6 @@ void setup() {
     Particle.subscribe("p-one_led-on", ledToggleEvent);
     Particle.subscribe("p-one_led-off", ledToggleEvent);
     Particle.subscribe("p-one_led-toggle", ledToggleEvent);
-    //Particle.subscribe("p-one_led-blink", ledBlinkEvent);
     Particle.subscribe("p-one_led-blink", ledToggleEvent);
 
 }
