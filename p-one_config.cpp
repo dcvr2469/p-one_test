@@ -1,13 +1,17 @@
-/**
- * Losant Particle workshop source code for Photon.
- *
- * Copyright (c) 2016 Losant IoT. All rights reserved.
- * https://www.losant.com
- */
 
 #include "application.h"
 
 int ledState = LOW;
+
+
+#include "SparkTime.h"
+
+UDP UDPClient;
+SparkTime rtc;
+
+unsigned long currentTime;
+//unsigned long lastTime = 0UL;
+String timeStr;
 
 /**
  * Reads the value of the photoresistor and
@@ -29,41 +33,6 @@ void readPhotoResistor() {
 Timer timer(5000, readPhotoResistor);
 
 /**
- * Sets the state of the LED.
- */
-void setLEDState(int state) {
-    digitalWrite(D0, state);
-    ledState = state;
-
-    Serial.println("led-state=" + String(ledState));
-}
-
-/**
- * Handles an event from particle cloud.
- */
-void ledToggleEvent(const char *event, const char *data) {
-
-    String command = String(event);
-    if(command.compareTo(String("p-one_led-on")) == 0) {
-        setLEDState(HIGH);
-    }
-    else if(command.compareTo(String("p-one_led-off")) == 0) {
-        setLEDState(LOW);
-    }
-    else if(command.compareTo(String("p-one_led-toggle")) == 0) {
-        setLEDState(ledState == HIGH ? LOW : HIGH);
-    }
-    else if(command.compareTo(String("p-one_led-blink")) == 0) {
-        for (int x=0; x<100; x=x+1) {
-          digitalWrite(D0, HIGH);
-          delay(1000);
-          digitalWrite(D0, LOW);
-          delay(1000);
-        }
-    }
-}
-
-/**
  * Called automatically by Photon once when the device
  * is powered on.
  */
@@ -81,14 +50,45 @@ void setup() {
     // Send power to the photoresistor.
     digitalWrite(A4, HIGH);
 
-    // Subscribe to events that control the LED.
-    Particle.subscribe("p-one_led-on", ledToggleEvent);
-    Particle.subscribe("p-one_led-off", ledToggleEvent);
-    Particle.subscribe("p-one_led-toggle", ledToggleEvent);
-    Particle.subscribe("p-one_led-blink", ledToggleEvent);
+    rtc.begin(&UDPClient, "north-america.pool.ntp.org");
+    rtc.setTimeZone(-5); // gmt offset
 
 }
 
 void loop() {
+    currentTime = rtc.now();
+    if (currentTime != lastTime) {
+      byte sec = rtc.second(currentTime);
+      if (sec == 10) {
+	// Build Date String
+	timeStr = "";
+	timeStr += rtc.dayOfWeekString(currentTime);
+	timeStr += ", ";
+	timeStr += rtc.monthNameString(currentTime);
+	timeStr += " ";
+	timeStr += rtc.dayString(currentTime);
+	timeStr += ", ";
+	timeStr += rtc.yearString(currentTime);
+	Serial.println(timeStr);
+      } else if (sec == 40) {
+	// Including current timezone
+	Serial.println(rtc.ISODateString(currentTime));
+      } else if (sec == 50) {
+	// UTC or Zulu time
+	Serial.println(rtc.ISODateUTCString(currentTime));
+      } else {
+	// Just the time in 12 hour format
+	timeStr = "";
+	timeStr += rtc.hour12String(currentTime);
+	timeStr += ":";
+	timeStr += rtc.minuteString(currentTime);
+	timeStr += ":";
+	timeStr += rtc.secondString(currentTime);
+	timeStr += " ";
+	timeStr += rtc.AMPMString(currentTime);
+	Serial.println(timeStr);
+      }
+      lastTime = currentTime;
+    }
 
 }
